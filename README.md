@@ -1,3 +1,7 @@
+Пока писал проект много о чём хотел написать, но уже всё позабыл.
+Исходя из ТЗ JWT токены передаются через headers, но я сделал через cookies, чтобы было удобно тестировать через
+swagger(но всё также возвращаю токены в ответе)
+
 ## First Start (Docker)
 
 ```bash
@@ -20,7 +24,7 @@ docker compose up -d
 Local tests (uses temp SQLite DB for tests):
 
 ```bash
-make test
+make test # if venv using
 ```
 
 Docker tests (if you want to run inside the container):
