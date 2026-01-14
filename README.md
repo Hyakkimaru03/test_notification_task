@@ -1,6 +1,7 @@
 Пока писал проект много о чём хотел написать, но уже всё позабыл.
 Исходя из ТЗ JWT токены передаются через headers, но я сделал через cookies, чтобы было удобно тестировать через
-swagger(но всё также возвращаю токены в ответе), также добавил middleware чтобы удалять невалидные токены(401 для access и 402 для refresh).
+swagger(но всё также возвращаю токены в ответе), также добавил middleware чтобы удалять невалидные токены(401 для access
+и 402 для refresh).
 
 ## First Start (Docker)
 
@@ -33,15 +34,10 @@ Docker tests (if you want to run inside the container):
 docker compose run --rm fastapi pytest
 ```
 
-
 ## Pre-commit
 
 ```bash
-pre-commit install # if venv using
-```
-or
-
-```bash
+pre-commit install
 make pre-commit
 ```
 
