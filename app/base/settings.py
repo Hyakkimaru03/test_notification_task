@@ -23,15 +23,11 @@ JWT_SECRET = os.getenv("JWT_SECRET", "test")
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 
-POSTGRES_USER = os.getenv('POSTGRES_USER', 'test_user')
-POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'test_password')
-POSTGRES_DB = os.getenv('POSTGRES_DB', 'test_db')
-POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'postgres')
-POSTGRES_PORT = os.getenv('POSTGRES_PORT', 5432)
+DATABASE_URL = os.getenv('DATABASE_URL', "postgres://test_user:testpassword@postgres:5432/test_db")
 
 TORTOISE_ORM = {
     "connections": {
-        "default": f"postgres://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"},
+        "default": DATABASE_URL},
     "apps": {
         "models": {
             "models": [
