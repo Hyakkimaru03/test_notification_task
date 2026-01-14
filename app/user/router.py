@@ -1,9 +1,19 @@
 from fastapi import APIRouter, Request, Response
 
-from services import (create_token_pair, login_user, refresh_access_token,
-                      register_user, set_jwt)
-from user.schemas import (AccessTokenResponse, CreateUserSchemaSchema,
-                          LoginUserSchema, RegisterResponse, TokenPair)
+from services import (
+    create_token_pair,
+    login_user,
+    refresh_access_token,
+    register_user,
+    set_jwt,
+)
+from user.schemas import (
+    AccessTokenResponse,
+    CreateUserSchemaSchema,
+    LoginUserSchema,
+    RegisterResponse,
+    TokenPair,
+)
 
 auth_router = APIRouter()
 

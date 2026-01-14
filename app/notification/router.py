@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from notification.schemas import (CreateNotificationSchema,
-                                  GetNotificationsSchema, Page)
+from notification.schemas import CreateNotificationSchema, GetNotificationsSchema, Page
 from services import create_notification as create_notification_service
 from services import delete_notification as delete_notification_service
 from services import get_notifications as get_notifications_service

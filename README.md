@@ -33,6 +33,18 @@ Docker tests (if you want to run inside the container):
 docker compose run --rm fastapi pytest
 ```
 
+
+## Pre-commit
+
+```bash
+pre-commit install # if venv using
+```
+or
+
+```bash
+make pre-commit
+```
+
 ## Linters / Formatters
 
 ```bash

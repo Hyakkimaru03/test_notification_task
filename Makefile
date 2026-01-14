@@ -17,3 +17,6 @@ migrate-up:
 
 test:
 	cd app && pytest
+
+pre-commit:
+	pre-commit run --all-files

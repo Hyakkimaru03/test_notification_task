@@ -9,16 +9,24 @@ from password_validator import PasswordValidator
 
 from base.enums import Error, ErrorMessages
 from base.settings import COOKIE_DOMAIN, DEBUG, JWT_SECRET, redis
-from notification.schemas import (CreateNotificationSchema,
-                                  GetNotificationsSchema)
+from notification.schemas import CreateNotificationSchema, GetNotificationsSchema
 from services_db import create_notification as create_notification_db
 from services_db import create_user as create_user_db
 from services_db import delete_notification as delete_notification_db
-from services_db import (fetch_notifications, get_notification_by_user,
-                         get_user_by_id, get_user_by_username, user_exists)
+from services_db import (
+    fetch_notifications,
+    get_notification_by_user,
+    get_user_by_id,
+    get_user_by_username,
+    user_exists,
+)
 from user.models import User
-from user.schemas import (CreateUserSchemaSchema, LoginUserSchema,
-                          NotificationInstanceSchema, UserMetaSchema)
+from user.schemas import (
+    CreateUserSchemaSchema,
+    LoginUserSchema,
+    NotificationInstanceSchema,
+    UserMetaSchema,
+)
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 1

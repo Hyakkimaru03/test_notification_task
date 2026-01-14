@@ -1,0 +1,20 @@
+[tool.aerich]
+tortoise_orm = "app.base.settings.TORTOISE_ORM"
+location = "./migrations"
+src_folder = "./."
+
+[tool.black]
+line-length = 88
+target-version = ["py313"]
+extend-exclude = "/(\\.venv|__pycache__|migrations)/"
+
+[tool.isort]
+profile = "black"
+line_length = 88
+skip = [".venv", "__pycache__", "migrations"]
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203", "W503"]
+exclude = ".venv,__pycache__,migrations"
+per-file-ignores = ["app/tests/conftest.py:E402"]
