@@ -1,3 +1,4 @@
+import math
 from typing import List, Optional, Tuple
 
 from notification.models import Notification
@@ -53,4 +54,5 @@ async def fetch_notifications(
         )
     )
     total = await qs.count()
-    return items, total
+    pages = math.ceil(total / page_size)
+    return items, pages
