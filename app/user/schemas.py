@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -14,7 +15,7 @@ class NotificationInstanceSchema(BaseModel):
     id: int
     type: NotificationType
     text: Optional[str] = None
-    created_at: int
+    created_at: datetime
     user: UserMetaSchema
 
 

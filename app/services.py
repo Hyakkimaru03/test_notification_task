@@ -204,7 +204,7 @@ async def get_notifications(
             id=i["id"],
             type=i["type"].value,
             text=i.get("text"),
-            created_at=int(i["created_at"].timestamp()),
+            created_at=i["created_at"],
             user=UserMetaSchema(
                 username=i["user__username"],
                 avatar_url=i.get("user__avatar_url"),
@@ -213,7 +213,7 @@ async def get_notifications(
         for i in rows
     ]
     payload = {
-        "data": [item.model_dump() for item in result],
+        "data": [item.model_dump(mode="json") for item in result],
         "count": total,
     }
     await redis.set(redis_key, json.dumps(payload), ex=60 * 60)
