@@ -1,4 +1,5 @@
 import json
+import math
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Literal, Tuple
 
@@ -9,7 +10,11 @@ from password_validator import PasswordValidator
 
 from base.enums import Error, ErrorMessages
 from base.settings import COOKIE_DOMAIN, DEBUG, JWT_SECRET, redis
-from notification.schemas import CreateNotificationSchema, GetNotificationsSchema
+from notification.schemas import (
+    CreateNotificationSchema,
+    GetNotificationsSchema,
+    PageMeta,
+)
 from services_db import create_notification as create_notification_db
 from services_db import create_user as create_user_db
 from services_db import delete_notification as delete_notification_db
@@ -174,9 +179,9 @@ async def _notifications_cache_version(uid: int) -> int:
         return 0
 
 
-async def _notifications_cache_key(uid: int, page: int, page_size: int) -> str:
+async def _notifications_cache_key(uid: int, offset: int, limit: int) -> str:
     version = await _notifications_cache_version(uid)
-    return f"notifications:{uid}:{version}:{page}:{page_size}"
+    return f"notifications:{uid}:{version}:{offset}:{limit}"
 
 
 async def _bump_notifications_cache(uid: int) -> None:
@@ -186,19 +191,29 @@ async def _bump_notifications_cache(uid: int) -> None:
 async def get_notifications(
     uid: int,
     params: GetNotificationsSchema,
-) -> Tuple[List[NotificationInstanceSchema], int]:
-    page = params.page
-    page_size = params.page_size
+) -> Tuple[List[NotificationInstanceSchema], PageMeta]:
+    offset = params.offset
+    limit = params.limit
 
-    redis_key = await _notifications_cache_key(uid, page, page_size)
+    redis_key = await _notifications_cache_key(uid, offset, limit)
     data = await redis.get(redis_key)
     if data:
         payload = json.loads(data)
         cached = [
             NotificationInstanceSchema.model_validate(item) for item in payload["data"]
         ]
-        return cached, payload["count"]
-    rows, total = await fetch_notifications(uid, page, page_size)
+        meta = PageMeta.model_validate(payload["meta"])
+        return cached, meta
+    rows, total_items = await fetch_notifications(uid, offset, limit)
+    total_pages = math.ceil(total_items / limit) if total_items else 0
+    meta = PageMeta(
+        offset=offset,
+        limit=limit,
+        total_items=total_items,
+        total_pages=total_pages,
+        has_next=offset + limit < total_items,
+        has_prev=offset > 0,
+    )
     result = [
         NotificationInstanceSchema(
             id=i["id"],
@@ -214,10 +229,10 @@ async def get_notifications(
     ]
     payload = {
         "data": [item.model_dump(mode="json") for item in result],
-        "count": total,
+        "meta": meta.model_dump(),
     }
     await redis.set(redis_key, json.dumps(payload), ex=60 * 60)
-    return result, total
+    return result, meta
 
 
 async def delete_notification(uid: int, notification_id: int) -> Response:

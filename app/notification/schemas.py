@@ -6,16 +6,26 @@ from pydantic import BaseModel
 from base.enums import NotificationType
 
 T = TypeVar("T")
+MAX_LIMIT = 100
 
 
 class BasePaginationSchema(BaseModel):
-    page: int = Query(ge=1, default=1)
-    page_size: int = Query(ge=1, default=20)
+    offset: int = Query(ge=0, default=0)
+    limit: int = Query(ge=1, le=MAX_LIMIT, default=20)
+
+
+class PageMeta(BaseModel):
+    offset: int
+    limit: int
+    total_items: int
+    total_pages: int
+    has_next: bool
+    has_prev: bool
 
 
 class Page(BaseModel, Generic[T]):
     data: List[T]
-    total_pages: int
+    meta: PageMeta
 
 
 class GetNotificationsSchema(BasePaginationSchema):

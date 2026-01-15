@@ -1,4 +1,3 @@
-import math
 from typing import List, Optional, Tuple
 
 from notification.models import Notification
@@ -38,12 +37,12 @@ async def delete_notification(notification: Notification) -> None:
 
 
 async def fetch_notifications(
-    uid: int, page: int, page_size: int
+    uid: int, offset: int, limit: int
 ) -> Tuple[List[dict], int]:
-    qs = Notification.filter(user_id=uid)
+    qs = Notification.filter(user_id=uid).order_by("-created_at", "-id")
     items = (
-        await qs.offset((page - 1) * page_size)
-        .limit(page_size)
+        await qs.offset(offset)
+        .limit(limit)
         .values(
             "id",
             "type",
@@ -54,5 +53,4 @@ async def fetch_notifications(
         )
     )
     total = await qs.count()
-    pages = math.ceil(total / page_size)
-    return items, pages
+    return items, total

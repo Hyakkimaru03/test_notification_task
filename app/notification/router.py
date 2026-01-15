@@ -15,8 +15,8 @@ notification_router = APIRouter()
 async def get_notifications(
     uid: int = Depends(get_uid), params: GetNotificationsSchema = Depends()
 ):
-    data, total_pages = await get_notifications_service(uid, params)
-    return Page(data=data, total_pages=total_pages)
+    data, meta = await get_notifications_service(uid, params)
+    return Page(data=data, meta=meta)
 
 
 @notification_router.delete("/{notification_id}")

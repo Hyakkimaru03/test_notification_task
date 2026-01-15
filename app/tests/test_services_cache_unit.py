@@ -12,7 +12,7 @@ from user.schemas import NotificationInstanceSchema
 async def test_get_notifications_uses_cache(monkeypatch, fake_redis):
     calls = {"count": 0}
 
-    async def fake_fetch_notifications(uid: int, page: int, page_size: int):
+    async def fake_fetch_notifications(uid: int, offset: int, limit: int):
         calls["count"] += 1
         return (
             [
@@ -30,12 +30,13 @@ async def test_get_notifications_uses_cache(monkeypatch, fake_redis):
 
     monkeypatch.setattr(services, "fetch_notifications", fake_fetch_notifications)
 
-    params = GetNotificationsSchema(page=1, page_size=20)
-    data_first, total_first = await services.get_notifications(1, params)
-    data_second, total_second = await services.get_notifications(1, params)
+    params = GetNotificationsSchema(offset=0, limit=20)
+    data_first, meta_first = await services.get_notifications(1, params)
+    data_second, meta_second = await services.get_notifications(1, params)
 
     assert calls["count"] == 1
-    assert total_first == 1
-    assert total_second == 1
+    assert meta_first.total_items == 1
+    assert meta_first.total_pages == 1
+    assert meta_second.total_items == 1
     assert isinstance(data_first[0], NotificationInstanceSchema)
     assert data_first[0].id == data_second[0].id
