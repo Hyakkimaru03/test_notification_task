@@ -21,6 +21,6 @@ ErrorMessages: Dict[int, str] = {
 
 
 class NotificationType(str, Enum):
-    LIKE = "Like"
-    COMMENT = "Comment"
-    REPOST = "Repost"
+    LIKE = "like"
+    COMMENT = "comment"
+    REPOST = "repost"

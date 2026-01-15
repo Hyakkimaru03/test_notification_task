@@ -34,7 +34,7 @@ async def test_notifications_flow(client: AsyncClient):
     response = await client.post(
         "/notifications/create",
         json={
-            "type": "Like",
+            "type": "like",
             "text": "Hello",
         },
     )
