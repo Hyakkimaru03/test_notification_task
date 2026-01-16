@@ -3,8 +3,8 @@ from types import SimpleNamespace
 import pytest
 from fastapi import HTTPException
 
-import services
 from user.schemas import CreateUserSchemaSchema
+from user.services import UserService
 
 
 @pytest.mark.asyncio
@@ -12,7 +12,7 @@ async def test_register_user_rejects_existing(monkeypatch):
     async def fake_exists(username: str) -> bool:
         return True
 
-    monkeypatch.setattr(services, "user_exists", fake_exists)
+    monkeypatch.setattr(UserService, "_user_exists", fake_exists)
     body = CreateUserSchemaSchema.model_validate(
         {
             "username": "user_123",
@@ -22,7 +22,7 @@ async def test_register_user_rejects_existing(monkeypatch):
     )
 
     with pytest.raises(HTTPException) as exc:
-        await services.register_user(body)
+        await UserService.register_user(body)
 
     assert exc.value.status_code == 400
 
@@ -43,8 +43,8 @@ async def test_register_user_creates(monkeypatch):
             avatar_url=avatar_url,
         )
 
-    monkeypatch.setattr(services, "user_exists", fake_exists)
-    monkeypatch.setattr(services, "create_user_db", fake_create_user_db)
+    monkeypatch.setattr(UserService, "_user_exists", fake_exists)
+    monkeypatch.setattr(UserService, "_create_user", fake_create_user_db)
 
     body = CreateUserSchemaSchema.model_validate(
         {
@@ -53,7 +53,7 @@ async def test_register_user_creates(monkeypatch):
             "avatar_url": None,
         }
     )
-    user = await services.register_user(body)
+    user = await UserService.register_user(body)
 
     assert user.username == body.username
     assert captured["password"] != body.password

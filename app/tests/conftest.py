@@ -13,8 +13,9 @@ from tortoise.contrib.fastapi import register_tortoise
 ROOT_DIR = Path(__file__).resolve().parents[1]
 sys.path.append(str(ROOT_DIR))
 
-import services
+from notification import services as notification_services
 from notification.router import notification_router
+from user import services as user_services
 from user.router import auth_router
 
 
@@ -42,13 +43,13 @@ class FakeRedis:
 @pytest.fixture(autouse=True)
 def fake_redis(monkeypatch):
     fake = FakeRedis()
-    monkeypatch.setattr(services, "redis", fake)
+    monkeypatch.setattr(notification_services, "redis", fake)
     return fake
 
 
 @pytest.fixture(autouse=True)
 def jwt_secret(monkeypatch):
-    monkeypatch.setattr(services, "JWT_SECRET", "test-secret")
+    monkeypatch.setattr(user_services, "JWT_SECRET", "test-secret")
 
 
 @pytest.fixture(scope="session")

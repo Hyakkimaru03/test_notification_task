@@ -2,9 +2,9 @@ from datetime import datetime, timezone
 
 import pytest
 
-import services
 from base.enums import NotificationType
 from notification.schemas import GetNotificationsSchema
+from notification.services import NotificationService
 from user.schemas import NotificationInstanceSchema
 
 
@@ -28,11 +28,13 @@ async def test_get_notifications_uses_cache(monkeypatch, fake_redis):
             1,
         )
 
-    monkeypatch.setattr(services, "fetch_notifications", fake_fetch_notifications)
+    monkeypatch.setattr(
+        NotificationService, "_fetch_notifications", fake_fetch_notifications
+    )
 
     params = GetNotificationsSchema(offset=0, limit=20)
-    data_first, meta_first = await services.get_notifications(1, params)
-    data_second, meta_second = await services.get_notifications(1, params)
+    data_first, meta_first = await NotificationService.get_notifications(1, params)
+    data_second, meta_second = await NotificationService.get_notifications(1, params)
 
     assert calls["count"] == 1
     assert meta_first.total_items == 1
