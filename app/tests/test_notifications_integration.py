@@ -4,7 +4,7 @@ import pytest
 from httpx import AsyncClient
 
 from notification.schemas import Page
-from user.schemas import NotificationInstanceSchema
+from user.schemas import NotificationInstanceSchema, TokenPair
 
 
 @pytest.mark.asyncio
@@ -30,6 +30,8 @@ async def test_notifications_flow(client: AsyncClient):
         },
     )
     assert response.status_code == 200
+    tokens = TokenPair.model_validate(response.json())
+    auth_headers = {"Authorization": f"Bearer {tokens.access_token}"}
 
     response = await client.post(
         "/notifications/create",
@@ -37,10 +39,13 @@ async def test_notifications_flow(client: AsyncClient):
             "type": "like",
             "text": "Hello",
         },
+        headers=auth_headers,
     )
     assert response.status_code == 200
 
-    response = await client.get("/notifications/", params={"offset": 0, "limit": 20})
+    response = await client.get(
+        "/notifications/", params={"offset": 0, "limit": 20}, headers=auth_headers
+    )
     assert response.status_code == 200
     page = Page[NotificationInstanceSchema].model_validate(response.json())
     assert len(page.data) == 1
@@ -52,10 +57,14 @@ async def test_notifications_flow(client: AsyncClient):
     assert page.meta.has_prev is False
 
     notification_id = page.data[0].id
-    response = await client.delete(f"/notifications/{notification_id}")
+    response = await client.delete(
+        f"/notifications/{notification_id}", headers=auth_headers
+    )
     assert response.status_code == 200
 
-    response = await client.get("/notifications/", params={"offset": 0, "limit": 20})
+    response = await client.get(
+        "/notifications/", params={"offset": 0, "limit": 20}, headers=auth_headers
+    )
     assert response.status_code == 200
     page = Page[NotificationInstanceSchema].model_validate(response.json())
     assert page.data == []

@@ -1,12 +1,6 @@
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, Request
 
-from services import (
-    create_token_pair,
-    login_user,
-    refresh_access_token,
-    register_user,
-    set_jwt,
-)
+from services import create_token_pair, login_user, refresh_access_token, register_user
 from user.schemas import (
     AccessTokenResponse,
     CreateUserSchemaSchema,
@@ -26,18 +20,13 @@ async def register(body: CreateUserSchemaSchema):
 
 
 @auth_router.post("/login", response_model=TokenPair)
-async def login(body: LoginUserSchema, response: Response):
+async def login(body: LoginUserSchema):
     user = await login_user(body)
     tokens = create_token_pair(user.id)
-
-    set_jwt(response, key="access_token", token=tokens["access_token"])
-    set_jwt(response, key="refresh_token", token=tokens["refresh_token"])
-
     return tokens
 
 
 @auth_router.post("/refresh", response_model=AccessTokenResponse)
-async def refresh(request: Request, response: Response):
+async def refresh(request: Request):
     new_access_token = await refresh_access_token(request)
-    set_jwt(response, token=new_access_token, key="access_token")
     return {"access_token": new_access_token}

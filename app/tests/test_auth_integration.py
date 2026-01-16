@@ -30,10 +30,11 @@ async def test_register_login_refresh(client: AsyncClient):
         },
     )
     assert response.status_code == 200
-    TokenPair.model_validate(response.json())
-    assert "access_token" in client.cookies
-    assert "refresh_token" in client.cookies
+    tokens = TokenPair.model_validate(response.json())
 
-    response = await client.post("/auth/refresh")
+    response = await client.post(
+        "/auth/refresh",
+        headers={"Authorization": f"Bearer {tokens.refresh_token}"},
+    )
     assert response.status_code == 200
     AccessTokenResponse.model_validate(response.json())

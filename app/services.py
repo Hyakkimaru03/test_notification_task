@@ -9,7 +9,7 @@ from fastapi import HTTPException, Request, Response, status
 from password_validator import PasswordValidator
 
 from base.enums import Error, ErrorMessages
-from base.settings import COOKIE_DOMAIN, DEBUG, JWT_SECRET, redis
+from base.settings import JWT_SECRET, redis
 from notification.schemas import (
     CreateNotificationSchema,
     GetNotificationsSchema,
@@ -85,39 +85,30 @@ def decode_jwt(token: str) -> dict | None:
         return None
 
 
-def set_jwt(
-    response: Response, token: str, key: Literal["access_token", "refresh_token"]
-) -> None:
-    max_age = (
-        ACCESS_TOKEN_EXPIRE_MINUTES * 60
-        if key == "access_token"
-        else REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
-    )
-    response.set_cookie(
-        key=key,
-        value=token,
-        httponly=True,
-        secure=not DEBUG,
-        samesite="none" if not DEBUG else "lax",
-        domain=COOKIE_DOMAIN if not DEBUG else None,
-        path="/",
-        max_age=max_age,
-    )
+def _get_bearer_token(request: Request) -> str | None:
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        return None
+    parts = auth_header.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        return None
+    return parts[1]
 
 
-def delete_jwt(response: Response, key: Literal["access_token", "refresh_token"]):
-    response.delete_cookie(
-        key=key,
-        domain=COOKIE_DOMAIN if not DEBUG else None,
-        path="/",
-    )
+def _decode_and_validate_token(
+    token: str, expected_type: Literal["access", "refresh"]
+) -> dict | None:
+    payload = decode_jwt(token)
+    if not payload or payload.get("type") != expected_type:
+        return None
+    return payload
 
 
 def get_uid_or_raise(request: Request) -> int:
-    token = request.cookies.get("access_token")
+    token = _get_bearer_token(request)
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    payload = decode_jwt(token)
+    payload = _decode_and_validate_token(token, "access")
     if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     return payload["pk"]
@@ -157,12 +148,12 @@ async def login_user(body: LoginUserSchema) -> User:
 
 
 async def refresh_access_token(request: Request) -> str:
-    refresh_token = request.cookies.get("refresh_token")
+    refresh_token = _get_bearer_token(request)
     if not refresh_token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    validated_data = decode_jwt(refresh_token)
+    validated_data = _decode_and_validate_token(refresh_token, "refresh")
     if not validated_data:
-        raise HTTPException(status_code=402)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     user = await get_user_by_id(validated_data["pk"])
     if not user or user.blocked:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
