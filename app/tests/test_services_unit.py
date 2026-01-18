@@ -1,8 +1,8 @@
 from types import SimpleNamespace
 
 import pytest
-from fastapi import HTTPException
 
+from base.exceptions import AppException
 from user.schemas import CreateUserSchemaSchema
 from user.services import UserService
 
@@ -21,10 +21,10 @@ async def test_register_user_rejects_existing(monkeypatch):
         }
     )
 
-    with pytest.raises(HTTPException) as exc:
+    with pytest.raises(AppException) as exc:
         await UserService.register_user(body)
 
-    assert exc.value.status_code == 400
+    assert exc.value.status_code == 409
 
 
 @pytest.mark.asyncio

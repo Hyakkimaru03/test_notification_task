@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException, Request, Security, status
+from fastapi import APIRouter, Request, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from base.exceptions import UnauthorizedError
 from user.schemas import (
     AccessTokenResponse,
     CreateUserSchemaSchema,
@@ -14,7 +15,11 @@ auth_router = APIRouter()
 bearer_scheme = HTTPBearer(auto_error=False)
 
 
-@auth_router.post("/register", response_model=RegisterResponse)
+@auth_router.post(
+    "/register",
+    response_model=RegisterResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def register(body: CreateUserSchemaSchema):
     user = await UserService.register_user(body)
     tokens = UserService.create_token_pair(user.id)
@@ -34,6 +39,6 @@ async def refresh(
     credentials: HTTPAuthorizationCredentials | None = Security(bearer_scheme),
 ):
     if credentials is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        raise UnauthorizedError(code="auth_required", message="Authorization required")
     new_access_token = await UserService.refresh_access_token(request)
     return {"access_token": new_access_token}

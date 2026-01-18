@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response, status
 
 from notification.schemas import CreateNotificationSchema, GetNotificationsSchema, Page
 from notification.services import NotificationService
@@ -17,13 +17,20 @@ async def get_notifications(
     return Page(data=data, meta=meta)
 
 
-@notification_router.delete("/{notification_id}")
+@notification_router.delete(
+    "/{notification_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 async def delete_notification(notification_id: int, uid: int = Depends(get_uid)):
     return await NotificationService.delete_notification(uid, notification_id)
 
 
-@notification_router.post("/create")
+@notification_router.post(
+    "/",
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_notification(
     body: CreateNotificationSchema, user: User = Depends(get_user)
 ):
     await NotificationService.create_notification(user, body)
+    return Response(status_code=status.HTTP_201_CREATED)

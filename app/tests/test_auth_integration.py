@@ -19,7 +19,7 @@ async def test_register_login_refresh(client: AsyncClient):
             "avatar_url": None,
         },
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
     RegisterResponse.model_validate(response.json())
 
     response = await client.post(

@@ -3,10 +3,16 @@ from typing import Dict, Literal
 
 import bcrypt
 import jwt
-from fastapi import HTTPException, Request, status
+from fastapi import Request
 from password_validator import PasswordValidator
 
-from base.enums import Error, ErrorMessages
+from base.enums import Error
+from base.exceptions import (
+    BadRequestError,
+    ConflictError,
+    ForbiddenError,
+    UnauthorizedError,
+)
 from base.settings import JWT_SECRET
 from user.models import User
 from user.schemas import CreateUserSchemaSchema, LoginUserSchema
@@ -94,10 +100,16 @@ class UserService:
     def get_uid_or_raise(cls, request: Request) -> int:
         token = cls._get_bearer_token(request)
         if not token:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+            raise UnauthorizedError(
+                code="auth_required",
+                message="Authorization required",
+            )
         payload = cls._decode_and_validate_token(token, "access")
         if not payload:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+            raise UnauthorizedError(
+                code="auth_invalid",
+                message="Invalid access token",
+            )
         return payload["pk"]
 
     @classmethod
@@ -107,14 +119,14 @@ class UserService:
     @classmethod
     async def register_user(cls, body: CreateUserSchemaSchema) -> User:
         if await cls._user_exists(body.username):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ErrorMessages[Error.USER_EXISTS.value],
+            raise ConflictError(
+                code="user_exists",
+                message=Error.USER_EXISTS.value,
             )
         if not password_schema.validate(body.password):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ErrorMessages[Error.PASSWORD_WEAK.value],
+            raise BadRequestError(
+                code="password_weak",
+                message=Error.PASSWORD_WEAK.value,
             )
         return await cls._create_user(
             username=body.username,
@@ -126,14 +138,14 @@ class UserService:
     async def login_user(cls, body: LoginUserSchema) -> User:
         user = await cls._get_user_by_username(body.username)
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=ErrorMessages[Error.USER_NOT_FOUND.value],
+            raise BadRequestError(
+                code="user_not_found",
+                message=Error.USER_NOT_FOUND.value,
             )
         if not cls._verify_password(body.password, user.password):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ErrorMessages[Error.INVALID_PASSWORD.value],
+            raise BadRequestError(
+                code="invalid_password",
+                message=Error.INVALID_PASSWORD.value,
             )
         return user
 
@@ -141,11 +153,20 @@ class UserService:
     async def refresh_access_token(cls, request: Request) -> str:
         refresh_token = cls._get_bearer_token(request)
         if not refresh_token:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+            raise UnauthorizedError(
+                code="auth_required",
+                message="Authorization required",
+            )
         validated_data = cls._decode_and_validate_token(refresh_token, "refresh")
         if not validated_data:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+            raise ForbiddenError(
+                code="auth_invalid",
+                message="Invalid refresh token",
+            )
         user = await cls._get_user_by_id(validated_data["pk"])
         if not user or user.blocked:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+            raise UnauthorizedError(
+                code="auth_invalid",
+                message="Invalid user",
+            )
         return cls.create_jwt_token(user.id, "access_token")

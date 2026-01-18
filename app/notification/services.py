@@ -2,9 +2,10 @@ import json
 import math
 from typing import List, Tuple
 
-from fastapi import HTTPException, Response, status
+from fastapi import Response
 
-from base.enums import Error, ErrorMessages
+from base.enums import Error
+from base.exceptions import NotFoundError
 from base.settings import redis
 from notification.schemas import (
     CreateNotificationSchema,
@@ -96,13 +97,13 @@ class NotificationService:
     async def delete_notification(cls, uid: int, notification_id: int) -> Response:
         notification = await cls._get_notification_by_user(uid, notification_id)
         if not notification:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=ErrorMessages[Error.NOT_FOUND.value],
+            raise NotFoundError(
+                code="notification_not_found",
+                message=Error.NOT_FOUND.value,
             )
         await cls._delete_notification(notification)
         await cls._bump_notifications_cache(uid)
-        return Response(status_code=status.HTTP_200_OK)
+        return Response(status_code=204)
 
     @classmethod
     async def create_notification(

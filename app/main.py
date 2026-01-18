@@ -1,15 +1,24 @@
-import logging
-
-import uvicorn
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import ValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from tortoise.contrib.fastapi import register_tortoise
 
-from base.settings import PORT, RELOAD, TORTOISE_ORM, WORKERS
+from base.error_handlers import (
+    app_exception_handler,
+    http_exception_handler,
+    pydantic_validation_exception_handler,
+    unhandled_exception_handler,
+    validation_exception_handler,
+)
+from base.exceptions import AppException
+from base.logging import setup_logging
+from base.settings import TORTOISE_ORM
 from notification.router import notification_router
 from user.router import auth_router
 
-logger = logging.getLogger(__name__)
+setup_logging()
 
 app = FastAPI(redoc_url=None)
 
@@ -28,8 +37,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.add_exception_handler(AppException, app_exception_handler)
+app.add_exception_handler(StarletteHTTPException, http_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(ValidationError, pydantic_validation_exception_handler)
+app.add_exception_handler(Exception, unhandled_exception_handler)
+
 app.include_router(notification_router, prefix="/notifications", tags=["notifications"])
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
-
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=PORT, reload=RELOAD, workers=WORKERS)

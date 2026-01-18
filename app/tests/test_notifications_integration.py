@@ -20,7 +20,7 @@ async def test_notifications_flow(client: AsyncClient):
             "avatar_url": None,
         },
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
 
     response = await client.post(
         "/auth/login",
@@ -34,14 +34,14 @@ async def test_notifications_flow(client: AsyncClient):
     auth_headers = {"Authorization": f"Bearer {tokens.access_token}"}
 
     response = await client.post(
-        "/notifications/create",
+        "/notifications/",
         json={
             "type": "like",
             "text": "Hello",
         },
         headers=auth_headers,
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
 
     response = await client.get(
         "/notifications/", params={"offset": 0, "limit": 20}, headers=auth_headers
@@ -60,7 +60,7 @@ async def test_notifications_flow(client: AsyncClient):
     response = await client.delete(
         f"/notifications/{notification_id}", headers=auth_headers
     )
-    assert response.status_code == 200
+    assert response.status_code == 204
 
     response = await client.get(
         "/notifications/", params={"offset": 0, "limit": 20}, headers=auth_headers

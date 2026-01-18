@@ -10,15 +10,10 @@ DEBUG = bool(os.getenv("DEBUG"))
 if DEBUG:
     DOMAIN_NAME = "127.0.0.1:8000"
     COOKIE_DOMAIN = f".{DOMAIN_NAME}"
-    WORKERS = 1
-    RELOAD = True
 else:
     DOMAIN_NAME = "127.0.0.1:8000"
     COOKIE_DOMAIN = f".{DOMAIN_NAME}"
-    RELOAD = False
-    WORKERS = 2
 
-PORT = 8000
 JWT_SECRET = os.getenv("JWT_SECRET", "test")
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
